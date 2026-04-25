@@ -1,14 +1,12 @@
 # 2. Получение данных о погоде через API.
 
-
 import requests
-
 
 api_url = "https://api.openweathermap.org/data/2.5/weather"
 
 
-def get_weather(lat: float, lon: float, api_key: str) -> dict | None:
-
+# выполнение HTTP‑запроса
+def fetch_weather(lat: float, lon: float, api_key: str) -> dict | None:
     params = {
         "lat": lat,
         "lon": lon,
@@ -23,8 +21,14 @@ def get_weather(lat: float, lon: float, api_key: str) -> dict | None:
         if response.status_code != 200:
             return None
 
-        data = response.json()
+        return response.json()
 
+    except Exception:
+        return None
+
+# извлечение данных из JSON
+def parse_weather(data: dict) -> dict | None:
+    try:
         return {
             "Город": data["name"],
             "Температура": data["main"]["temp"],
@@ -32,8 +36,16 @@ def get_weather(lat: float, lon: float, api_key: str) -> dict | None:
             "Скорость ветра": data["wind"]["speed"],
             "Влажность": data["main"]["humidity"]
         }
-
     except Exception:
         return None
 
+def get_weather(lat: float, lon: float, api_key: str) -> dict | None:
+    raw = fetch_weather(lat, lon, api_key)
+    if raw is None:
+        return None
+
+    return parse_weather(raw)
+
+
+# вывод в консоль
 print(get_weather(55.75396, 37.62039, "016409432b4afafeb6d7bf65196c12e2"))
