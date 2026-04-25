@@ -1,36 +1,46 @@
-from unittest.mock import patch, MagicMock
+import pytest
+from unittest.mock import MagicMock, patch
 from parser import check_site, load_html
 
 
-def test_check_site_ok():
-    # фейковый ответ
-    mock_response = MagicMock()
-    mock_response.status_code = 200
+# использование fixture
+# создание поддельного объекта
+@pytest.fixture
+def mock_response():
+    return MagicMock()
 
-    # patch подменяет requests.head внутри parser.py
-    with patch("parser.requests.head", return_value=mock_response):
-        assert check_site("https://example.com") is True
+# помена через @patch
+@patch("parser.requests.head")
+def test_check_site_ok(mock_head, mock_response):
+    mock_response.status_code = 200  # успешно
+    mock_head.return_value = mock_response
 
-def test_check_site_server_error():
-    mock_response = MagicMock()
-    mock_response.status_code = 503
+    assert check_site("https://example.com") is True
 
-    with patch("parser.requests.head", return_value=mock_response):
-        assert check_site("https://example.com") is False
+@patch("parser.requests.head")
+def test_check_site_server_error(mock_head, mock_response):
+    mock_response.status_code = 503  # ошибка сервера
+    mock_head.return_value = mock_response
 
-def test_check_site_exception():
-    # side_effect выбросит исключение
-    with patch("parser.requests.head", side_effect=Exception("ошибка сети")):
-        assert check_site("https://example.com") is False
+    assert check_site("https://example.com") is False
 
-def test_load_html_ok():
-    mock_response = MagicMock()
+# исключение
+@patch("parser.requests.head")
+def test_check_site_exception(mock_head):
+    mock_head.side_effect = Exception("ошибка сети")
+
+    assert check_site("https://example.com") is False
+
+@patch("parser.requests.get")
+def test_load_html_ok(mock_get, mock_response):
     mock_response.text = "<html>ok</html>"
+    mock_get.return_value = mock_response
 
-    with patch("parser.requests.get", return_value=mock_response):
-        assert load_html("https://example.com") == "<html>ok</html>"
+    assert load_html("https://example.com") == "<html>ok</html>"
 
-def test_load_html_exception():
-    # имитация ошибки сети
-    with patch("parser.requests.get", side_effect=Exception("ошибка сети")):
-        assert load_html("https://example.com") is None
+# side_effect выбросит исключение
+@patch("parser.requests.get")
+def test_load_html_exception(mock_get):
+    mock_get.side_effect = Exception("ошибка сети")
+
+    assert load_html("https://example.com") is None
