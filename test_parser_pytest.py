@@ -8,7 +8,7 @@ from parser import parse_one_card, parse_all_cards, base_url
     [
         (
             '<a class="card-news" href="/news/meme"><h3>Сегодня умер Дима Билан</h3></a>',
-            {"title": "Заголовок", "link": base_url + "/news/123"},
+            {"title": "Сегодня умер Дима Билан", "link": base_url + "/news/meme"},
         ),
         (
             '<a class="card-news" href="/news/meme"></a>',

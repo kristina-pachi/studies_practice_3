@@ -15,7 +15,7 @@ def check_site(url: str) -> bool:
     try:
         response = requests.head(url, timeout=5)
         return response.status_code < 500
-    except requests.RequestException:
+    except Exception:
         return False
 
 # загрузка HTML-кода страницы
@@ -23,7 +23,7 @@ def load_html(url: str) -> str | None:
     try:
         response = requests.get(url, timeout=5)
         return response.text
-    except requests.RequestException:
+    except Exception:
         return None
 
 # поиск карточек новостей
