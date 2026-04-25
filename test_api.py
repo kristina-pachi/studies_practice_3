@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from api import get_weather
+from api import get_weather, fetch_weather, parse_weather
 
 # использование fixture
 # чтобы не дублировать
@@ -14,20 +14,38 @@ def items():
 
 # тест на успешней ответ
 @patch("api.requests.get")
-def test_get_weather_success(mock_get, mock_response):
-    # фейковый ответ API
+def test_fetch_weather_success(mock_get, mock_response, items):
     mock_response.status_code = 200
-    mock_response.json.return_value = {
+    mock_response.json.return_value = {"ok": True}
+
+    mock_get.return_value = mock_response
+
+    lat, lon, key = items
+    result = fetch_weather(lat, lon, key)
+
+    assert result == {"ok": True}
+
+# ошибка сервера
+@patch("api.requests.get")
+def test_fetch_weather_api_error(mock_get, mock_response, items):
+    mock_response.status_code = 404
+    mock_get.return_value = mock_response
+
+    lat, lon, key = items
+    result = fetch_weather(lat, lon, key)
+
+    assert result is None
+
+# корректный json
+def test_parse_weather_success():
+    data = {
         "name": "Москва",
         "main": {"temp": 5.0, "humidity": 80},
         "weather": [{"description": "пасмурно"}],
         "wind": {"speed": 3.2}
     }
 
-    # mock_get возвращать mock_response
-    mock_get.return_value = mock_response
-
-    result = get_weather(55.75, 37.61, "FAKE_KEY")
+    result = parse_weather(data)
 
     assert result == {
         "Город": "Москва",
@@ -37,33 +55,22 @@ def test_get_weather_success(mock_get, mock_response):
         "Влажность": 80
     }
 
+
 # тест с неверным json ответом
-@patch("api.requests.get")
-def test_get_weather_bad_json(mock_get, mock_response):
-    mock_response.status_code = 200
-    mock_response.json.return_value = {}
+def test_parse_weather_bad_json():
+    data = {}  # нет нужных полей
 
-    mock_get.return_value = mock_response
-
-    result = get_weather(*items)
+    result = parse_weather(data)
 
     assert result is None
 
-# ошибка сервера
-@patch("api.requests.get")
-def test_get_weather_api_error(mock_get, mock_response):
-    mock_response.status_code = 404  # ошибка API
-    mock_get.return_value = mock_response
+# успешний сценарий
+@patch("api.fetch_weather")
+@patch("api.parse_weather")
+def test_get_weather_success(mock_parse, mock_fetch, items):
+    mock_fetch.return_value = {"raw": True}
+    mock_parse.return_value = {"ok": True}
 
     result = get_weather(*items)
 
-    assert result is None
-
-# ошибка сети
-@patch("api.requests.get")
-def test_get_weather_exception(mock_get):
-    mock_get.side_effect = Exception("ошибка сети")
-
-    result = get_weather(*items)
-
-    assert result is None
+    assert result == {"ok": True}
