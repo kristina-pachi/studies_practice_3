@@ -29,15 +29,43 @@ def fetch_weather(lat: float, lon: float, api_key: str) -> dict | None:
 # извлечение данных из JSON
 def parse_weather(data: dict) -> dict | None:
     try:
+        city = data["name"]
+        temp = data["main"]["temp"]
+        humidity = data["main"]["humidity"]
+        description = data["weather"][0]["description"]
+        wind_speed = data["wind"]["speed"]
+
+        # проверки типов
+        if not isinstance(city, str):
+            return None
+
+        if not isinstance(temp, (float, int)):
+            return None
+
+        if not isinstance(description, str):
+            return None
+
+        if not isinstance(wind_speed, (float, int)):
+            return None
+
+        if not isinstance(humidity, int):
+            return None
+
+        # проверка влажности от 0 до 100 %
+        if humidity < 0 or humidity > 100:
+            return None
+
         return {
-            "Город": data["name"],
-            "Температура": data["main"]["temp"],
-            "Описание погоды": data["weather"][0]["description"],
-            "Скорость ветра": data["wind"]["speed"],
-            "Влажность": data["main"]["humidity"]
+            "Город": city,
+            "Температура": float(temp),
+            "Описание погоды": description,
+            "Скорость ветра": float(wind_speed),
+            "Влажность": humidity
         }
+
     except Exception:
         return None
+
 
 def get_weather(lat: float, lon: float, api_key: str) -> dict | None:
     raw = fetch_weather(lat, lon, api_key)

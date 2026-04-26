@@ -59,7 +59,6 @@ def test_parse_weather_success():
 # тест с неверным json ответом
 def test_parse_weather_bad_json():
     data = {}  # нет нужных полей
-
     result = parse_weather(data)
 
     assert result is None
