@@ -12,6 +12,56 @@ def mock_response():
 def items():
     return 55.75, 37.61, "FAKE_KEY"
 
+@pytest.mark.parametrize(
+    "data",
+    [
+        # температура строкой
+        {
+            "name": "Москва",
+            "main": {"temp": "пять*пять", "humidity": 80},
+            "weather": [{"description": "пасмурно"}],
+            "wind": {"speed": 3.2}
+        },
+
+        # город не строка
+        {
+            "name": 404,
+            "main": {"temp": 2.0, "humidity": 90},
+            "weather": [{"description": "на улице rain на душе pain"}],
+            "wind": {"speed": 23.5}
+        },
+
+        # скорость ветра строкой
+        {
+            "name": "Москва",
+            "main": {"temp": 0.0, "humidity": 60},
+            "weather": [{"description": "пасмурно"}],
+            "wind": {"speed": "сносит крыши"}
+        },
+
+        # описание не строка
+        {
+            "name": "Москва",
+            "main": {"temp": 5.0, "humidity": 80},
+            "weather": [{"description": 200}],
+            "wind": {"speed": 3.2}
+        },
+
+        #  вне диапазон 
+        {
+            "name": "Москва",
+            "main": {"temp": 15.0, "humidity": 1000},
+            "weather": [{"description": "мокровато"}],
+            "wind": {"speed": 0.0}
+        },
+    ]
+)
+
+# неверный тип данных
+def test_parse_weather_invalid_types(data):
+    assert parse_weather(data) is None
+
+
 # тест на успешней ответ
 @patch("api.requests.get")
 def test_fetch_weather_success(mock_get, mock_response, items):
@@ -62,6 +112,8 @@ def test_parse_weather_bad_json():
     result = parse_weather(data)
 
     assert result is None
+
+
 
 # успешний сценарий
 @patch("api.fetch_weather")
